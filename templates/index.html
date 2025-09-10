@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحميل من يوتيوب - نسخة مطورة</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <button id="dark-mode-toggle">🌙</button>
+    <div class="container">
+        <h1>أداة تحميل فيديوهات يوتيوب المطورة</h1>
+        <p class="subtitle">الصق رابط الفيديو أدناه لتحميله بالصيغة والجودة التي تفضلها</p>
+        
+        <div class="input-container">
+            <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+            <button id="fetch-btn">جلب معلومات الفيديو</button>
+        </div>
+
+        <div id="loader" class="loader" style="display: none;"></div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        
+        <div id="video-info-container" class="video-info-container" style="display: none;">
+            <div class="thumbnail">
+                <img id="video-thumbnail" src="" alt="صورة الفيديو المصغرة">
+            </div>
+            <div class="details">
+                <h2 id="video-title"></h2>
+                <p><strong>المدة:</strong> <span id="video-duration"></span></p>
+                
+                <div class="download-options">
+                    
+                    <!-- قسم الفيديو مع الصوت -->
+                    <div id="video-audio-section">
+                        <h3><span class="icon">🎬</span> فيديو + صوت (جودة عادية)</h3>
+                        <div id="video-audio-streams" class="streams-grid"></div>
+                    </div>
+
+                    <!-- قسم الفيديو فقط -->
+                    <div id="video-only-section">
+                        <h3><span class="icon">🖼️</span> فيديو فقط (جودة عالية - بدون صوت)</h3>
+                        <p class="note">ملاحظة: هذه الصيغ مناسبة للمونتاج، لا تحتوي على صوت.</p>
+                        <div id="video-only-streams" class="streams-grid"></div>
+                    </div>
+                    
+                    <!-- قسم الصوت فقط -->
+                    <div id="audio-only-section">
+                        <h3><span class="icon">🎵</span> صوت فقط</h3>
+                        <div id="audio-only-streams" class="streams-grid"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const fetchBtn = document.getElementById('fetch-btn');
+        const urlInput = document.getElementById('youtube-url');
+        const loader = document.getElementById('loader');
+        const videoInfoContainer = document.getElementById('video-info-container');
+        const errorMessage = document.getElementById('error-message');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+        let currentVideoTitle = '';
+        let currentVideoUrl = '';
+
+        // --- منطق الوضع الليلي ---
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.textContent = '☀️';
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.textContent = '☀️';
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.textContent = '🌙';
+            }
+        });
+        // -------------------------
+
+        fetchBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!url) {
+                showError('الرجاء إدخال رابط يوتيوب.');
+                return;
+            }
+
+            videoInfoContainer.style.display = 'none';
+            errorMessage.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/get_video_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url }),
+                });
+
+                const data = await response.json();
+                loader.style.display = 'none';
+
+                if (response.ok) {
+                    displayVideoInfo(data, url);
+                } else {
+                    showError(data.error || 'حدث خطأ غير معروف.');
+                }
+
+            } catch (error) {
+                showError('فشل الاتصال بالخادم. الرجاء المحاولة مرة أخرى.');
+                loader.style.display = 'none';
+            }
+        });
+
+        function displayVideoInfo(data, videoUrl) {
+            currentVideoUrl = videoUrl;
+            currentVideoTitle = data.video_info.title;
+
+            document.getElementById('video-thumbnail').src = data.video_info.thumbnail_url;
+            document.getElementById('video-title').textContent = data.video_info.title;
+            document.getElementById('video-duration').textContent = data.video_info.duration;
+
+            const { video_audio, video_only, audio_only } = data.streams;
+
+            populateStreams('video-audio-streams', video_audio, false);
+            populateStreams('video-only-streams', video_only, false);
+            populateStreams('audio-only-streams', audio_only, true);
+
+            document.getElementById('video-audio-section').style.display = video_audio.length > 0 ? 'block' : 'none';
+            document.getElementById('video-only-section').style.display = video_only.length > 0 ? 'block' : 'none';
+            document.getElementById('audio-only-section').style.display = audio_only.length > 0 ? 'block' : 'none';
+
+            videoInfoContainer.style.display = 'flex';
+        }
+
+        function populateStreams(containerId, streams, isAudio) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (streams.length > 0) {
+                streams.forEach(stream => {
+                    const text = isAudio ?
+                        `${stream.ext.toUpperCase()} - ${stream.filesize}` :
+                        `${stream.resolution} (${stream.ext.toUpperCase()}) - ${stream.filesize}`;
+                    const downloadLink = createDownloadButton(stream.itag, text, isAudio);
+                    container.appendChild(downloadLink);
+                });
+            } else {
+                container.innerHTML = '<p class="note">لا توجد خيارات متاحة في هذه الفئة.</p>';
+            }
+        }
+        
+        function createDownloadButton(itag, text, isAudio) {
+            const button = document.createElement('a');
+            button.className = 'download-btn';
+            let href = `/download?url=${encodeURIComponent(currentVideoUrl)}&itag=${itag}&title=${encodeURIComponent(currentVideoTitle)}`;
+            if (isAudio) {
+                href += '&is_audio=true';
+            }
+            button.href = href;
+            button.textContent = text;
+            button.target = '_blank';
+            return button;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            videoInfoContainer.style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
+
