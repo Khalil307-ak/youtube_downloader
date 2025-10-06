@@ -40,7 +40,7 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/Khalil307-ak/youtube_downloader.git
+git clone https://github.com/yourusername/youtube_downloader.git
 cd youtube_downloader
 ```
 
@@ -179,6 +179,23 @@ You can modify colors and appearance in `static/css/style.css`:
 - This tool is for personal and educational use only
 
 ## 🐛 Troubleshooting
+
+### Quick Fix for "Server Error"
+If you see "حدث خطأ غير متوقع في السيرفر" (Unexpected server error):
+
+1. **Install/Update yt-dlp:**
+```bash
+pip install --upgrade yt-dlp
+```
+
+2. **Run the diagnostic tool:**
+```bash
+python test_connection.py
+```
+
+3. **Check app health from interface:**
+   - Go to "التاريخ" (History) tab
+   - Click "فحص التطبيق" (Check App)
 
 ### "yt-dlp not found" Error
 ```bash
