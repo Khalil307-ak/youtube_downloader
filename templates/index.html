@@ -133,6 +133,7 @@
                 <h3>تاريخ التحميلات</h3>
                 <button id="refresh-history">تحديث</button>
                 <button id="clear-history" class="btn-danger">مسح التاريخ</button>
+                <button id="health-check" class="btn-secondary">فحص التطبيق</button>
                 <div id="history-list"></div>
             </div>
         </div>
@@ -460,6 +461,7 @@
         // --- تحديث التاريخ ---
         document.getElementById('refresh-history').addEventListener('click', loadHistory);
         document.getElementById('clear-history').addEventListener('click', clearHistory);
+        document.getElementById('health-check').addEventListener('click', performHealthCheck);
 
         function clearHistory() {
             if (confirm('هل أنت متأكد من مسح تاريخ التحميلات؟')) {
@@ -472,6 +474,21 @@
                         showError('فشل في مسح التاريخ');
                     });
             }
+        }
+
+        function performHealthCheck() {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'healthy') {
+                        showNotification(`✅ ${data.message} - yt-dlp: ${data.yt_dlp_version}`, 'success');
+                    } else {
+                        showError(`❌ ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    showError('فشل في فحص التطبيق');
+                });
         }
 
         function loadHistory() {
