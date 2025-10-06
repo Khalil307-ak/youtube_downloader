@@ -5,9 +5,11 @@ import re
 import os
 import threading
 import time
-from urllib.parse import quote
-from datetime import datetime
+import requests
+from urllib.parse import quote, urlencode
+from datetime import datetime, timedelta
 import uuid
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
@@ -157,6 +159,279 @@ def get_video_info():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return jsonify({'error': f'حدث خطأ غير متوقع: {str(e)}'}), 500
+
+@app.route('/search_youtube', methods=['POST'])
+def search_youtube():
+    """البحث المباشر في يوتيوب"""
+    data = request.json
+    query = data.get('query', '').strip()
+    max_results = data.get('max_results', 10)
+    
+    if not query:
+        return jsonify({'error': 'الرجاء إدخال كلمة البحث.'}), 400
+    
+    try:
+        # استخدام yt-dlp للبحث
+        command = ['yt-dlp', '--dump-json', '--flat-playlist', '--no-warnings', 
+                  f'ytsearch{max_results}:{query}']
+        
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        result = subprocess.run(command, capture_output=True, text=True, check=True, encoding='utf-8', startupinfo=startupinfo)
+        
+        videos = []
+        for line in result.stdout.strip().split('\n'):
+            if line:
+                try:
+                    video_data = json.loads(line)
+                    videos.append({
+                        'title': video_data.get('title', 'بدون عنوان'),
+                        'url': video_data.get('url', ''),
+                        'duration': video_data.get('duration', 0),
+                        'thumbnail': video_data.get('thumbnail', ''),
+                        'uploader': video_data.get('uploader', ''),
+                        'view_count': video_data.get('view_count', 0),
+                        'upload_date': video_data.get('upload_date', '')
+                    })
+                except json.JSONDecodeError:
+                    continue
+        
+        return jsonify({
+            'query': query,
+            'total_results': len(videos),
+            'videos': videos
+        })
+
+    except subprocess.CalledProcessError as e:
+        print(f"Search error: {e.stderr}")
+        return jsonify({'error': 'فشل في البحث. تأكد من اتصال الإنترنت.'}), 500
+    except Exception as e:
+        print(f"Search error: {e}")
+        return jsonify({'error': f'حدث خطأ في البحث: {str(e)}'}), 500
+
+@app.route('/get_subtitles', methods=['POST'])
+def get_subtitles():
+    """جلب قائمة الترجمات المتاحة"""
+    data = request.json
+    url = data.get('url')
+    
+    if not url:
+        return jsonify({'error': 'الرجاء إدخال رابط الفيديو.'}), 400
+    
+    try:
+        command = ['yt-dlp', '--list-subs', '--no-warnings', url]
+        
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        result = subprocess.run(command, capture_output=True, text=True, check=True, encoding='utf-8', startupinfo=startupinfo)
+        
+        subtitles = []
+        lines = result.stdout.split('\n')
+        in_subtitles_section = False
+        
+        for line in lines:
+            line = line.strip()
+            if 'Available subtitles' in line:
+                in_subtitles_section = True
+                continue
+            elif 'Available automatic captions' in line:
+                in_subtitles_section = True
+                continue
+            elif line.startswith('Language formats') or line.startswith('WARNING'):
+                break
+            
+            if in_subtitles_section and line and not line.startswith('Available'):
+                parts = line.split()
+                if len(parts) >= 2:
+                    lang_code = parts[0]
+                    lang_name = parts[1]
+                    subtitles.append({
+                        'code': lang_code,
+                        'name': lang_name,
+                        'available': True
+                    })
+        
+        return jsonify({
+            'url': url,
+            'subtitles': subtitles
+        })
+
+    except subprocess.CalledProcessError as e:
+        print(f"Subtitles error: {e.stderr}")
+        return jsonify({'error': 'فشل في جلب الترجمات.'}), 500
+    except Exception as e:
+        print(f"Subtitles error: {e}")
+        return jsonify({'error': f'حدث خطأ في جلب الترجمات: {str(e)}'}), 500
+
+@app.route('/download_subtitle', methods=['POST'])
+def download_subtitle():
+    """تحميل ترجمة محددة"""
+    data = request.json
+    url = data.get('url')
+    lang_code = data.get('lang_code', 'ar')
+    title = data.get('title', 'subtitle')
+    
+    if not url:
+        return jsonify({'error': 'الرجاء إدخال رابط الفيديو.'}), 400
+    
+    try:
+        filename = sanitize_filename(title)
+        
+        command = ['yt-dlp', '--write-subs', '--write-auto-subs', 
+                  f'--sub-langs', lang_code, '--sub-format', 'srt',
+                  '--skip-download', '--no-warnings', url]
+        
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        result = subprocess.run(command, capture_output=True, text=True, check=True, encoding='utf-8', startupinfo=startupinfo)
+        
+        # البحث عن ملف الترجمة المحمل
+        subtitle_files = []
+        for line in result.stdout.split('\n'):
+            if '.srt' in line and 'has already been downloaded' in line:
+                subtitle_files.append(line.split()[0])
+        
+        if subtitle_files:
+            subtitle_file = subtitle_files[0]
+            download_name = f"{filename}_{lang_code}.srt"
+            
+            encoded_filename = quote(download_name)
+            headers = {
+                'Content-Disposition': f"attachment; filename*=UTF-8''{encoded_filename}"
+            }
+            
+            # قراءة ملف الترجمة وإرساله
+            with open(subtitle_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            return Response(content, mimetype='text/plain', headers=headers)
+        else:
+            return jsonify({'error': 'لم يتم العثور على ترجمة بهذا اللغة.'}), 404
+
+    except subprocess.CalledProcessError as e:
+        print(f"Subtitle download error: {e.stderr}")
+        return jsonify({'error': 'فشل في تحميل الترجمة.'}), 500
+    except Exception as e:
+        print(f"Subtitle download error: {e}")
+        return jsonify({'error': f'حدث خطأ في تحميل الترجمة: {str(e)}'}), 500
+
+@app.route('/convert_to_mp3', methods=['POST'])
+def convert_to_mp3():
+    """تحويل الفيديو إلى MP3 بجودة عالية"""
+    data = request.json
+    url = data.get('url')
+    title = data.get('title', 'audio')
+    quality = data.get('quality', '320k')
+    
+    if not url:
+        return jsonify({'error': 'الرجاء إدخال رابط الفيديو.'}), 400
+    
+    try:
+        filename = sanitize_filename(title)
+        download_name = f"{filename}.mp3"
+        
+        # استخدام yt-dlp مع ffmpeg للتحويل
+        command = ['yt-dlp', '-x', '--audio-format', 'mp3', 
+                  '--audio-quality', quality, '-o', '-', url]
+        
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo)
+        
+        encoded_filename = quote(download_name)
+        headers = {
+            'Content-Disposition': f"attachment; filename*=UTF-8''{encoded_filename}",
+            'Content-Type': 'audio/mpeg'
+        }
+        
+        def generate():
+            try:
+                chunk_size = 8192
+                while True:
+                    chunk = process.stdout.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+            except Exception as e:
+                print(f"MP3 conversion error: {e}")
+                raise
+        
+        return Response(generate(), mimetype='audio/mpeg', headers=headers)
+
+    except Exception as e:
+        print(f"MP3 conversion error: {e}")
+        return jsonify({'error': f'فشل في تحويل الصوت إلى MP3: {str(e)}'}), 500
+
+@app.route('/trim_video', methods=['POST'])
+def trim_video():
+    """تقطيع الفيديو حسب الوقت"""
+    data = request.json
+    url = data.get('url')
+    title = data.get('title', 'trimmed_video')
+    start_time = data.get('start_time', '00:00:00')
+    end_time = data.get('end_time')
+    duration = data.get('duration')
+    
+    if not url:
+        return jsonify({'error': 'الرجاء إدخال رابط الفيديو.'}), 400
+    
+    try:
+        filename = sanitize_filename(title)
+        
+        # بناء أمر التقطيع
+        command = ['yt-dlp', '-f', 'best', '-o', '-', url]
+        
+        # إضافة خيارات التقطيع إذا كانت متاحة
+        if end_time:
+            command.extend(['--external-downloader', 'ffmpeg', 
+                           '--external-downloader-args', f'ffmpeg:-ss {start_time} -to {end_time}'])
+        elif duration:
+            command.extend(['--external-downloader', 'ffmpeg', 
+                           '--external-downloader-args', f'ffmpeg:-ss {start_time} -t {duration}'])
+        
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo)
+        
+        download_name = f"{filename}_trimmed.mp4"
+        encoded_filename = quote(download_name)
+        headers = {
+            'Content-Disposition': f"attachment; filename*=UTF-8''{encoded_filename}",
+            'Content-Type': 'video/mp4'
+        }
+        
+        def generate():
+            try:
+                chunk_size = 8192
+                while True:
+                    chunk = process.stdout.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+            except Exception as e:
+                print(f"Video trimming error: {e}")
+                raise
+        
+        return Response(generate(), mimetype='video/mp4', headers=headers)
+
+    except Exception as e:
+        print(f"Video trimming error: {e}")
+        return jsonify({'error': f'فشل في تقطيع الفيديو: {str(e)}'}), 500
 
 @app.route('/health')
 def health_check():
