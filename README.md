@@ -23,7 +23,7 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/youtube_downloader.git
+git clone https://github.com/Khalil307-akyoutube_downloader.git
 cd youtube_downloader
 ```
 
