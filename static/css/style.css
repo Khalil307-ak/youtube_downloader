@@ -690,6 +690,197 @@ body.dark-mode .error-message {
     word-wrap: break-word;
 }
 
+/* --- البحث في يوتيوب --- */
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.search-options label {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.search-options select {
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.search-results {
+    background-color: var(--note-bg);
+    border: 1px solid var(--note-border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.search-videos-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.search-video-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--container-bg);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.search-video-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.search-thumbnail {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.search-thumbnail img {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.video-duration {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.search-video-info {
+    flex-grow: 1;
+}
+
+.search-video-info h4 {
+    margin: 0 0 8px 0;
+    color: var(--text-color);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.search-video-info p {
+    margin: 4px 0;
+    color: var(--subtitle-color);
+    font-size: 12px;
+}
+
+.search-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* --- الأدوات المتقدمة --- */
+.tools-container h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.tool-section {
+    background-color: var(--note-bg);
+    border: 1px solid var(--note-border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.tool-section h4 {
+    margin-top: 0;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.trim-container, .subtitle-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.time-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    align-items: center;
+}
+
+.time-inputs label {
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.time-inputs input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: monospace;
+}
+
+.subtitles-list {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.subtitle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background-color: var(--note-bg);
+}
+
+.subtitle-item span {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* --- تحسينات إضافية --- */
+#mp3-quality, #search-results-count {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.input-container select {
+    min-width: 150px;
+}
+
 @media (max-width: 600px) {
     .container { padding: 20px; }
     .input-container { flex-direction: column; }
