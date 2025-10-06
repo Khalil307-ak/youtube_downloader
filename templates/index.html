@@ -18,8 +18,10 @@
         <!-- تبويبات الميزات -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="single">فيديو واحد</button>
+            <button class="tab-btn" data-tab="search">بحث يوتيوب</button>
             <button class="tab-btn" data-tab="playlist">قائمة تشغيل</button>
             <button class="tab-btn" data-tab="batch">تحميل متعدد</button>
+            <button class="tab-btn" data-tab="tools">أدوات متقدمة</button>
             <button class="tab-btn" data-tab="settings">الإعدادات</button>
             <button class="tab-btn" data-tab="history">التاريخ</button>
         </div>
@@ -29,6 +31,26 @@
             <div class="input-container">
                 <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
                 <button id="fetch-btn">جلب معلومات الفيديو</button>
+            </div>
+        </div>
+
+        <!-- تبويب البحث -->
+        <div id="search-tab" class="tab-content">
+            <div class="search-container">
+                <div class="input-container">
+                    <input type="text" id="search-query" placeholder="ابحث عن فيديوهات في يوتيوب...">
+                    <button id="search-btn">بحث</button>
+                </div>
+                <div class="search-options">
+                    <label for="search-results-count">عدد النتائج:</label>
+                    <select id="search-results-count">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div id="search-results" class="search-results" style="display: none;"></div>
             </div>
         </div>
 
@@ -123,6 +145,52 @@
                     <button id="reset-settings" class="btn-secondary">إعادة تعيين</button>
                     <button id="export-settings" class="btn-secondary">تصدير الإعدادات</button>
                     <button id="import-settings" class="btn-secondary">استيراد الإعدادات</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الأدوات المتقدمة -->
+        <div id="tools-tab" class="tab-content">
+            <div id="tools-container">
+                <h3>الأدوات المتقدمة</h3>
+                
+                <div class="tool-section">
+                    <h4>🎵 تحويل الصوت إلى MP3</h4>
+                    <div class="input-container">
+                        <input type="text" id="mp3-url" placeholder="رابط الفيديو للتحويل إلى MP3">
+                        <select id="mp3-quality">
+                            <option value="320k">جودة عالية (320k)</option>
+                            <option value="256k">جودة جيدة (256k)</option>
+                            <option value="192k">جودة متوسطة (192k)</option>
+                            <option value="128k">جودة منخفضة (128k)</option>
+                        </select>
+                        <button id="convert-mp3-btn">تحويل إلى MP3</button>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h4>✂️ تقطيع الفيديو</h4>
+                    <div class="trim-container">
+                        <input type="text" id="trim-url" placeholder="رابط الفيديو للتقطيع">
+                        <div class="time-inputs">
+                            <label>وقت البداية:</label>
+                            <input type="text" id="start-time" placeholder="00:00:00" value="00:00:00">
+                            <label>وقت النهاية:</label>
+                            <input type="text" id="end-time" placeholder="00:01:00">
+                            <label>أو المدة:</label>
+                            <input type="text" id="duration" placeholder="00:01:00">
+                        </div>
+                        <button id="trim-video-btn">تقطيع الفيديو</button>
+                    </div>
+                </div>
+
+                <div class="tool-section">
+                    <h4>📝 تحميل الترجمات</h4>
+                    <div class="subtitle-container">
+                        <input type="text" id="subtitle-url" placeholder="رابط الفيديو للترجمات">
+                        <button id="get-subtitles-btn">عرض الترجمات المتاحة</button>
+                        <div id="subtitles-list" class="subtitles-list" style="display: none;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -340,6 +408,239 @@
             })
             .catch(error => {
                 showError('فشل في بدء التحميل المتعدد');
+            });
+        }
+
+        // --- البحث في يوتيوب ---
+        document.getElementById('search-btn').addEventListener('click', async () => {
+            const query = document.getElementById('search-query').value.trim();
+            const maxResults = document.getElementById('search-results-count').value;
+            
+            if (!query) {
+                showError('الرجاء إدخال كلمة البحث.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/search_youtube', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, max_results: parseInt(maxResults) })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displaySearchResults(data);
+                } else {
+                    showError(data.error || 'فشل في البحث.');
+                }
+            } catch (error) {
+                showError('فشل الاتصال بالخادم.');
+            }
+        });
+
+        function displaySearchResults(data) {
+            const container = document.getElementById('search-results');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <h3>نتائج البحث: "${data.query}" (${data.total_results} نتيجة)</h3>
+                <div class="search-videos-list"></div>
+            `;
+
+            const videosList = container.querySelector('.search-videos-list');
+            data.videos.forEach(video => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'search-video-item';
+                videoItem.innerHTML = `
+                    <div class="search-thumbnail">
+                        <img src="${video.thumbnail}" alt="صورة مصغرة" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiB2aWV3Qm94PSIwIDAgMTIwIDkwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iOTAiIGZpbGw9IiNlZWUiLz48dGV4dCB4PSI2MCIgeT0iNDUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+لا توجد صورة</dGV4dD48L3N2Zz4='">
+                        <div class="video-duration">${formatDuration(video.duration)}</div>
+                    </div>
+                    <div class="search-video-info">
+                        <h4>${video.title}</h4>
+                        <p class="uploader">بواسطة: ${video.uploader}</p>
+                        <p class="views">المشاهدات: ${formatNumber(video.view_count)}</p>
+                        <div class="search-actions">
+                            <button class="btn-small" onclick="openVideoInNewTab('${video.url}')">عرض</button>
+                            <button class="btn-small" onclick="downloadFromSearch('${video.url}', '${video.title}')">تحميل</button>
+                        </div>
+                    </div>
+                `;
+                videosList.appendChild(videoItem);
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function openVideoInNewTab(url) {
+            window.open(url, '_blank');
+        }
+
+        function downloadFromSearch(url, title) {
+            // فتح صفحة جديدة مع الرابط
+            window.open(`/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`, '_blank');
+        }
+
+        // --- الأدوات المتقدمة ---
+        document.getElementById('convert-mp3-btn').addEventListener('click', async () => {
+            const url = document.getElementById('mp3-url').value.trim();
+            const quality = document.getElementById('mp3-quality').value;
+            
+            if (!url) {
+                showError('الرجاء إدخال رابط الفيديو.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/convert_to_mp3', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url, quality: quality })
+                });
+
+                if (response.ok) {
+                    // تحميل الملف
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = 'converted_audio.mp3';
+                    a.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    showNotification('تم تحويل الصوت إلى MP3 بنجاح!', 'success');
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'فشل في التحويل.');
+                }
+            } catch (error) {
+                showError('فشل في تحويل الصوت.');
+            }
+        });
+
+        document.getElementById('trim-video-btn').addEventListener('click', async () => {
+            const url = document.getElementById('trim-url').value.trim();
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            const duration = document.getElementById('duration').value;
+            
+            if (!url) {
+                showError('الرجاء إدخال رابط الفيديو.');
+                return;
+            }
+
+            if (!endTime && !duration) {
+                showError('الرجاء تحديد وقت النهاية أو المدة.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/trim_video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        url: url, 
+                        start_time: startTime,
+                        end_time: endTime || null,
+                        duration: duration || null
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = 'trimmed_video.mp4';
+                    a.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    showNotification('تم تقطيع الفيديو بنجاح!', 'success');
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'فشل في التقطيع.');
+                }
+            } catch (error) {
+                showError('فشل في تقطيع الفيديو.');
+            }
+        });
+
+        document.getElementById('get-subtitles-btn').addEventListener('click', async () => {
+            const url = document.getElementById('subtitle-url').value.trim();
+            
+            if (!url) {
+                showError('الرجاء إدخال رابط الفيديو.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/get_subtitles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displaySubtitles(data);
+                } else {
+                    showError(data.error || 'فشل في جلب الترجمات.');
+                }
+            } catch (error) {
+                showError('فشل في جلب الترجمات.');
+            }
+        });
+
+        function displaySubtitles(data) {
+            const container = document.getElementById('subtitles-list');
+            container.style.display = 'block';
+            container.innerHTML = '<h4>الترجمات المتاحة:</h4>';
+            
+            if (data.subtitles.length === 0) {
+                container.innerHTML += '<p>لا توجد ترجمات متاحة لهذا الفيديو.</p>';
+                return;
+            }
+
+            data.subtitles.forEach(subtitle => {
+                const subtitleItem = document.createElement('div');
+                subtitleItem.className = 'subtitle-item';
+                subtitleItem.innerHTML = `
+                    <span>${subtitle.name} (${subtitle.code})</span>
+                    <button class="btn-small" onclick="downloadSubtitle('${data.url}', '${subtitle.code}')">تحميل</button>
+                `;
+                container.appendChild(subtitleItem);
+            });
+        }
+
+        function downloadSubtitle(url, langCode) {
+            fetch('/download_subtitle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url, lang_code: langCode })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    throw new Error('فشل في تحميل الترجمة');
+                }
+            })
+            .then(blob => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `subtitle_${langCode}.srt`;
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                showNotification('تم تحميل الترجمة بنجاح!', 'success');
+            })
+            .catch(error => {
+                showError('فشل في تحميل الترجمة');
             });
         }
 
