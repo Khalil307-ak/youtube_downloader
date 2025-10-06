@@ -15,9 +15,142 @@
         <h1>أداة تحميل فيديوهات يوتيوب المطورة</h1>
         <p class="subtitle">الصق رابط الفيديو أدناه لتحميله بالصيغة والجودة التي تفضلها</p>
         
-        <div class="input-container">
-            <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
-            <button id="fetch-btn">جلب معلومات الفيديو</button>
+        <!-- تبويبات الميزات -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="single">فيديو واحد</button>
+            <button class="tab-btn" data-tab="playlist">قائمة تشغيل</button>
+            <button class="tab-btn" data-tab="batch">تحميل متعدد</button>
+            <button class="tab-btn" data-tab="settings">الإعدادات</button>
+            <button class="tab-btn" data-tab="history">التاريخ</button>
+        </div>
+
+        <!-- تبويب الفيديو الواحد -->
+        <div id="single-tab" class="tab-content active">
+            <div class="input-container">
+                <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+                <button id="fetch-btn">جلب معلومات الفيديو</button>
+            </div>
+        </div>
+
+        <!-- تبويب قائمة التشغيل -->
+        <div id="playlist-tab" class="tab-content">
+            <div class="playlist-container">
+                <div class="input-container">
+                    <input type="text" id="playlist-url" placeholder="https://www.youtube.com/playlist?list=...">
+                    <button id="playlist-fetch-btn">جلب معلومات قائمة التشغيل</button>
+                </div>
+                <div id="playlist-info" class="playlist-info" style="display: none;"></div>
+                <div id="playlist-videos" class="playlist-videos" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- تبويب التحميل المتعدد -->
+        <div id="batch-tab" class="tab-content">
+            <div class="batch-container">
+                <textarea id="batch-urls" placeholder="الصق عدة روابط يوتيوب، كل رابط في سطر منفصل..."></textarea>
+                <button id="batch-fetch-btn">جلب معلومات جميع الفيديوهات</button>
+            </div>
+            <div id="batch-results" class="batch-results" style="display: none;"></div>
+        </div>
+
+        <!-- تبويب الإعدادات -->
+        <div id="settings-tab" class="tab-content">
+            <div id="settings-container">
+                <h3>الإعدادات المتقدمة</h3>
+                
+                <div class="settings-section">
+                    <h4>إعدادات التحميل</h4>
+                    <div class="setting-item">
+                        <label for="max-concurrent">عدد التحميلات المتزامنة:</label>
+                        <input type="number" id="max-concurrent" min="1" max="5" value="2">
+                        <small>عدد الفيديوهات التي يمكن تحميلها في نفس الوقت</small>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="default-quality">الجودة الافتراضية:</label>
+                        <select id="default-quality">
+                            <option value="best">أفضل جودة</option>
+                            <option value="720p">720p</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                            <option value="audio">صوت فقط</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="download-path">مسار التحميل:</label>
+                        <input type="text" id="download-path" placeholder="مجلد التحميلات الافتراضي">
+                        <button id="browse-path">تصفح</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4>إعدادات الواجهة</h4>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="auto-dark-mode"> تفعيل الوضع الليلي تلقائياً
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="show-notifications" checked> إظهار الإشعارات
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="save-history" checked> حفظ تاريخ التحميلات
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4>إعدادات متقدمة</h4>
+                    <div class="setting-item">
+                        <label for="user-agent">User Agent:</label>
+                        <input type="text" id="user-agent" placeholder="متصفح افتراضي">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="proxy">البروكسي (اختياري):</label>
+                        <input type="text" id="proxy" placeholder="http://proxy:port">
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button id="save-settings" class="btn-primary">حفظ الإعدادات</button>
+                    <button id="reset-settings" class="btn-secondary">إعادة تعيين</button>
+                    <button id="export-settings" class="btn-secondary">تصدير الإعدادات</button>
+                    <button id="import-settings" class="btn-secondary">استيراد الإعدادات</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب التاريخ -->
+        <div id="history-tab" class="tab-content">
+            <div id="history-container">
+                <h3>تاريخ التحميلات</h3>
+                <button id="refresh-history">تحديث</button>
+                <button id="clear-history" class="btn-danger">مسح التاريخ</button>
+                <div id="history-list"></div>
+            </div>
+        </div>
+
+        <!-- شريط التقدم -->
+        <div id="progress-container" class="progress-container" style="display: none;">
+            <h3>تقدم التحميل</h3>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div id="progress-text" class="progress-text">0%</div>
+            <div id="progress-message" class="progress-message"></div>
+        </div>
+
+        <!-- التحميلات النشطة -->
+        <div id="active-downloads" class="active-downloads" style="display: none;">
+            <h3>التحميلات النشطة</h3>
+            <div id="downloads-list"></div>
         </div>
 
         <div id="loader" class="loader" style="display: none;"></div>
@@ -68,6 +201,8 @@
 
         let currentVideoTitle = '';
         let currentVideoUrl = '';
+        let activeDownloads = new Map();
+        let progressInterval = null;
 
         // --- منطق الوضع الليلي ---
         if (localStorage.getItem('darkMode') === 'enabled') {
@@ -86,6 +221,357 @@
             }
         });
         // -------------------------
+
+        // --- منطق التبويبات ---
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+                
+                // إخفاء جميع المحتويات
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // إزالة النشط من جميع الأزرار
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                
+                // إظهار المحتوى المطلوب
+                document.getElementById(tabName + '-tab').classList.add('active');
+                btn.classList.add('active');
+                
+                // تحديث التاريخ عند الانتقال إليه
+                if (tabName === 'history') {
+                    loadHistory();
+                }
+            });
+        });
+
+        // --- قائمة التشغيل ---
+        document.getElementById('playlist-fetch-btn').addEventListener('click', async () => {
+            const url = document.getElementById('playlist-url').value.trim();
+            if (!url) {
+                showError('الرجاء إدخال رابط قائمة التشغيل.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/playlist_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displayPlaylistInfo(data);
+                } else {
+                    showError(data.error || 'فشل في جلب معلومات قائمة التشغيل.');
+                }
+            } catch (error) {
+                showError('فشل الاتصال بالخادم.');
+            }
+        });
+
+        function displayPlaylistInfo(data) {
+            const infoContainer = document.getElementById('playlist-info');
+            const videosContainer = document.getElementById('playlist-videos');
+            
+            infoContainer.style.display = 'block';
+            videosContainer.style.display = 'block';
+            
+            infoContainer.innerHTML = `
+                <h3>${data.playlist_title}</h3>
+                <p><strong>عدد الفيديوهات:</strong> ${data.total_videos}</p>
+                <button id="download-all-playlist" class="download-all-btn">تحميل جميع الفيديوهات</button>
+            `;
+            
+            videosContainer.innerHTML = '';
+            data.videos.forEach((video, index) => {
+                const videoItem = document.createElement('div');
+                videoItem.className = 'playlist-video-item';
+                videoItem.innerHTML = `
+                    <div class="video-thumbnail-small">
+                        <img src="${video.thumbnail}" alt="صورة مصغرة" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiB2aWV3Qm94PSIwIDAgMTIwIDkwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iOTAiIGZpbGw9IiNlZWUiLz48dGV4dCB4PSI2MCIgeT0iNDUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+لا توجد صورة</dGV4dD48L3N2Zz4='">
+                    </div>
+                    <div class="video-info-small">
+                        <h4>${video.title}</h4>
+                        <p>المدة: ${formatDuration(video.duration)}</p>
+                        <button class="btn-small" onclick="downloadSingleFromPlaylist('${video.url}', '${video.title}')">تحميل</button>
+                    </div>
+                `;
+                videosContainer.appendChild(videoItem);
+            });
+            
+            // إضافة مستمع لتحميل جميع الفيديوهات
+            document.getElementById('download-all-playlist').addEventListener('click', () => {
+                const urls = data.videos.map(video => video.url);
+                downloadPlaylistBatch(urls);
+            });
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds || seconds === 0) return 'غير معروف';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function downloadSingleFromPlaylist(url, title) {
+            // فتح صفحة جديدة لتحميل الفيديو الفردي
+            window.open(`/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`, '_blank');
+        }
+
+        function downloadPlaylistBatch(urls) {
+            // بدء تحميل متعدد للقائمة
+            fetch('/batch_download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: urls })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.batch_id) {
+                    startProgressTracking(data.batch_id);
+                    showNotification(`تم بدء تحميل ${urls.length} فيديو من القائمة`, 'info');
+                }
+            })
+            .catch(error => {
+                showError('فشل في بدء التحميل المتعدد');
+            });
+        }
+
+        // --- التحميل المتعدد ---
+        document.getElementById('batch-fetch-btn').addEventListener('click', async () => {
+            const urlsText = document.getElementById('batch-urls').value.trim();
+            if (!urlsText) {
+                showError('الرجاء إدخال روابط يوتيوب.');
+                return;
+            }
+
+            const urls = urlsText.split('\n').filter(url => url.trim());
+            if (urls.length === 0) {
+                showError('لا توجد روابط صالحة.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/batch_download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ urls: urls })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    startProgressTracking(data.batch_id);
+                    showBatchResults(data);
+                } else {
+                    showError(data.error || 'حدث خطأ في التحميل المتعدد.');
+                }
+            } catch (error) {
+                showError('فشل الاتصال بالخادم.');
+            }
+        });
+
+        // --- الإعدادات ---
+        document.getElementById('save-settings').addEventListener('click', saveSettings);
+        document.getElementById('reset-settings').addEventListener('click', resetSettings);
+        document.getElementById('export-settings').addEventListener('click', exportSettings);
+        document.getElementById('import-settings').addEventListener('click', importSettings);
+        
+        // تحميل الإعدادات عند فتح التبويب
+        document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+            
+            document.getElementById('max-concurrent').value = settings.maxConcurrent || 2;
+            document.getElementById('default-quality').value = settings.defaultQuality || 'best';
+            document.getElementById('download-path').value = settings.downloadPath || '';
+            document.getElementById('auto-dark-mode').checked = settings.autoDarkMode || false;
+            document.getElementById('show-notifications').checked = settings.showNotifications !== false;
+            document.getElementById('save-history').checked = settings.saveHistory !== false;
+            document.getElementById('user-agent').value = settings.userAgent || '';
+            document.getElementById('proxy').value = settings.proxy || '';
+        }
+
+        function saveSettings() {
+            const settings = {
+                maxConcurrent: parseInt(document.getElementById('max-concurrent').value),
+                defaultQuality: document.getElementById('default-quality').value,
+                downloadPath: document.getElementById('download-path').value,
+                autoDarkMode: document.getElementById('auto-dark-mode').checked,
+                showNotifications: document.getElementById('show-notifications').checked,
+                saveHistory: document.getElementById('save-history').checked,
+                userAgent: document.getElementById('user-agent').value,
+                proxy: document.getElementById('proxy').value
+            };
+            
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+            showNotification('تم حفظ الإعدادات بنجاح!', 'success');
+        }
+
+        function resetSettings() {
+            if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات؟')) {
+                localStorage.removeItem('appSettings');
+                loadSettings();
+                showNotification('تم إعادة تعيين الإعدادات', 'info');
+            }
+        }
+
+        function exportSettings() {
+            const settings = localStorage.getItem('appSettings') || '{}';
+            const blob = new Blob([settings], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'youtube-downloader-settings.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('تم تصدير الإعدادات', 'success');
+        }
+
+        function importSettings() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const settings = JSON.parse(e.target.result);
+                            localStorage.setItem('appSettings', JSON.stringify(settings));
+                            loadSettings();
+                            showNotification('تم استيراد الإعدادات بنجاح!', 'success');
+                        } catch (error) {
+                            showError('خطأ في ملف الإعدادات');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // --- تحديث التاريخ ---
+        document.getElementById('refresh-history').addEventListener('click', loadHistory);
+        document.getElementById('clear-history').addEventListener('click', clearHistory);
+
+        function clearHistory() {
+            if (confirm('هل أنت متأكد من مسح تاريخ التحميلات؟')) {
+                fetch('/clear_history', { method: 'POST' })
+                    .then(() => {
+                        loadHistory();
+                        showNotification('تم مسح التاريخ', 'info');
+                    })
+                    .catch(error => {
+                        showError('فشل في مسح التاريخ');
+                    });
+            }
+        }
+
+        function loadHistory() {
+            fetch('/history')
+                .then(response => response.json())
+                .then(history => {
+                    displayHistory(history);
+                })
+                .catch(error => {
+                    console.error('Error loading history:', error);
+                });
+        }
+
+        function displayHistory(history) {
+            const container = document.getElementById('history-list');
+            container.innerHTML = '';
+
+            if (history.length === 0) {
+                container.innerHTML = '<p class="note">لا يوجد تاريخ تحميلات.</p>';
+                return;
+            }
+
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <div class="history-info">
+                        <h4>${item.title}</h4>
+                        <p><strong>الجودة:</strong> ${item.quality}</p>
+                        <p><strong>التاريخ:</strong> ${new Date(item.timestamp).toLocaleString('ar-SA')}</p>
+                        <p><strong>الحجم:</strong> ${(item.size / 1024 / 1024).toFixed(2)} MB</p>
+                    </div>
+                    <div class="history-actions">
+                        <button class="btn-small" onclick="window.open('${item.url}', '_blank')">عرض الفيديو</button>
+                    </div>
+                `;
+                container.appendChild(historyItem);
+            });
+        }
+
+        function showBatchResults(data) {
+            const container = document.getElementById('batch-results');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <h3>نتائج التحميل المتعدد</h3>
+                <p>تم بدء تحميل ${data.total} فيديو</p>
+                <div id="batch-progress"></div>
+            `;
+        }
+
+        function startProgressTracking(downloadId) {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+
+            progressInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/progress/${downloadId}`);
+                    const progress = await response.json();
+                    
+                    updateProgressBar(progress);
+                    
+                    if (progress.status === 'completed' || progress.status === 'error') {
+                        clearInterval(progressInterval);
+                        if (progress.status === 'completed') {
+                            showNotification('تم التحميل بنجاح!', 'success');
+                        } else {
+                            showError(progress.message);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error tracking progress:', error);
+                }
+            }, 1000);
+        }
+
+        function updateProgressBar(progress) {
+            const container = document.getElementById('progress-container');
+            const fill = document.getElementById('progress-fill');
+            const text = document.getElementById('progress-text');
+            const message = document.getElementById('progress-message');
+
+            container.style.display = 'block';
+            fill.style.width = progress.progress + '%';
+            text.textContent = progress.progress + '%';
+            message.textContent = progress.message;
+        }
+
+        function showNotification(message, type = 'info') {
+            // إنشاء إشعار
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
 
         fetchBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
@@ -160,14 +646,53 @@
         function createDownloadButton(itag, text, isAudio) {
             const button = document.createElement('a');
             button.className = 'download-btn';
-            let href = `/download?url=${encodeURIComponent(currentVideoUrl)}&itag=${itag}&title=${encodeURIComponent(currentVideoTitle)}`;
+            const downloadId = generateDownloadId();
+            let href = `/download?url=${encodeURIComponent(currentVideoUrl)}&itag=${itag}&title=${encodeURIComponent(currentVideoTitle)}&download_id=${downloadId}`;
             if (isAudio) {
                 href += '&is_audio=true';
             }
+            
             button.href = href;
             button.textContent = text;
             button.target = '_blank';
+            
+            // إضافة تتبع التقدم
+            button.addEventListener('click', () => {
+                startProgressTracking(downloadId);
+                addToActiveDownloads(downloadId, currentVideoTitle, text);
+            });
+            
             return button;
+        }
+
+        function generateDownloadId() {
+            return 'download_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function addToActiveDownloads(downloadId, title, quality) {
+            const container = document.getElementById('active-downloads');
+            const list = document.getElementById('downloads-list');
+            
+            container.style.display = 'block';
+            
+            const downloadItem = document.createElement('div');
+            downloadItem.className = 'download-item';
+            downloadItem.id = `download-${downloadId}`;
+            downloadItem.innerHTML = `
+                <div class="download-info">
+                    <h4>${title}</h4>
+                    <p>${quality}</p>
+                </div>
+                <div class="download-status">
+                    <div class="mini-progress-bar">
+                        <div class="mini-progress-fill" id="mini-progress-${downloadId}"></div>
+                    </div>
+                    <span class="download-percentage" id="mini-percentage-${downloadId}">0%</span>
+                </div>
+            `;
+            
+            list.appendChild(downloadItem);
+            activeDownloads.set(downloadId, downloadItem);
         }
 
         function showError(message) {
