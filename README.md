@@ -9,6 +9,10 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 - **Playlist Support**: Download entire YouTube playlists
 - **Batch Download**: Download multiple videos simultaneously
 - **Quality Preview**: See available formats before downloading
+- **YouTube Search**: Search and download directly from YouTube
+- **Audio Conversion**: Convert videos to MP3 with high quality
+- **Video Trimming**: Cut videos by time segments
+- **Subtitle Download**: Download subtitles in multiple languages
 
 ### 🎨 **User Experience**
 - **Dark/Light Mode**: With automatic preference saving
@@ -40,7 +44,7 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/Khalil307-ak/youtube_downloader.git
+git clone https://github.com/yourusername/youtube_downloader.git
 cd youtube_downloader
 ```
 
@@ -108,6 +112,20 @@ Then open your browser and go to: `http://localhost:5000`
    - User agent and proxy settings
 3. **Save settings** or export/import configuration
 
+### 🔍 YouTube Search
+1. **Go to "بحث يوتيوب" tab**
+2. **Enter search query** in Arabic or English
+3. **Select number of results** (5-50)
+4. **Click "بحث"** to search YouTube
+5. **Choose videos** to download directly
+
+### 🛠️ Advanced Tools
+1. **Go to "أدوات متقدمة" tab**
+2. **Audio Conversion**: Convert any video to MP3
+3. **Video Trimming**: Cut videos by time (start/end)
+4. **Subtitle Download**: Get subtitles in any language
+5. **Quality Selection**: Choose MP3 quality (128k-320k)
+
 ## 🎨 Advanced Features
 
 ### 🌙 Dark Mode
@@ -144,6 +162,24 @@ Then open your browser and go to: `http://localhost:5000`
 - **Proxy Support**: Configure proxy settings for restricted networks
 - **User Agent**: Customize browser identification
 - **Settings Backup**: Export/import your configuration
+
+### 🔍 Search & Discovery
+- **Direct YouTube Search**: Search YouTube without leaving the app
+- **Smart Results**: Get video thumbnails, duration, and metadata
+- **Quick Download**: Download search results with one click
+- **Result Filtering**: Choose number of search results (5-50)
+
+### 🎵 Audio & Video Tools
+- **High-Quality MP3**: Convert videos to MP3 (128k-320k)
+- **Video Trimming**: Cut videos by specific time ranges
+- **Multiple Formats**: Support for various audio/video formats
+- **Batch Processing**: Process multiple files simultaneously
+
+### 📝 Subtitle Features
+- **Multi-Language Support**: Download subtitles in any language
+- **Automatic Detection**: Find available subtitles automatically
+- **SRT Format**: Standard subtitle format compatibility
+- **Manual Selection**: Choose specific subtitle languages
 
 ## 📁 Project Structure
 
@@ -270,7 +306,7 @@ We welcome contributions! You can:
 ### Development Setup
 ```bash
 # Fork and clone the repository
-git clone https://github.com/yourusername/youtube_downloader.git
+git clone https://github.com/Khalil307-ak/youtube_downloader.git
 cd youtube_downloader
 
 # Install development dependencies
