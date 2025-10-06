@@ -70,6 +70,12 @@ def get_video_info():
     if not url:
         return jsonify({'error': 'الرجاء إدخال رابط صالح.'}), 400
 
+    # التحقق من وجود yt-dlp
+    try:
+        subprocess.run(['yt-dlp', '--version'], capture_output=True, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return jsonify({'error': 'yt-dlp غير مثبت. يرجى تثبيته أولاً: pip install yt-dlp'}), 500
+
     try:
         command = ['yt-dlp', '--dump-json', '--no-warnings', url]
         
@@ -113,8 +119,16 @@ def get_video_info():
                 audio_only_streams.append(stream_info)
 
         # ترتيب الجودات من الأعلى للأقل
-        video_audio_streams = sorted(video_audio_streams, key=lambda x: int(re.sub(r'\D', '', x['resolution'].split('p')[0])), reverse=True)
-        video_only_streams = sorted(video_only_streams, key=lambda x: (int(re.sub(r'\D', '', x['resolution'].split('p')[0])), x.get('fps', 0)), reverse=True)
+        def get_resolution_number(resolution):
+            try:
+                if 'p' in resolution:
+                    return int(re.sub(r'\D', '', resolution.split('p')[0]))
+                return 0
+            except:
+                return 0
+
+        video_audio_streams = sorted(video_audio_streams, key=lambda x: get_resolution_number(x['resolution']), reverse=True)
+        video_only_streams = sorted(video_only_streams, key=lambda x: (get_resolution_number(x['resolution']), x.get('fps', 0)), reverse=True)
         audio_only_streams = sorted(audio_only_streams, key=lambda x: x.get('abr', 0), reverse=True)
 
         return jsonify({
@@ -128,10 +142,45 @@ def get_video_info():
 
     except subprocess.CalledProcessError as e:
         print(f"Error calling yt-dlp: {e.stderr}")
-        return jsonify({'error': 'فشل في جلب معلومات الفيديو. تأكد من أن الرابط صحيح.'}), 500
+        error_msg = e.stderr.decode('utf-8') if e.stderr else 'Unknown error'
+        if 'Video unavailable' in error_msg:
+            return jsonify({'error': 'الفيديو غير متاح أو محذوف.'}), 400
+        elif 'Private video' in error_msg:
+            return jsonify({'error': 'الفيديو خاص ولا يمكن الوصول إليه.'}), 400
+        elif 'Age-restricted' in error_msg:
+            return jsonify({'error': 'الفيديو مقيد بالعمر.'}), 400
+        else:
+            return jsonify({'error': 'فشل في جلب معلومات الفيديو. تأكد من أن الرابط صحيح.'}), 500
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
+        return jsonify({'error': 'فشل في تحليل معلومات الفيديو.'}), 500
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        return jsonify({'error': 'حدث خطأ غير متوقع في السيرفر.'}), 500
+        return jsonify({'error': f'حدث خطأ غير متوقع: {str(e)}'}), 500
+
+@app.route('/health')
+def health_check():
+    """فحص صحة التطبيق"""
+    try:
+        # فحص yt-dlp
+        result = subprocess.run(['yt-dlp', '--version'], capture_output=True, text=True, check=True)
+        yt_dlp_version = result.stdout.strip()
+        
+        return jsonify({
+            'status': 'healthy',
+            'yt_dlp_version': yt_dlp_version,
+            'message': 'التطبيق يعمل بشكل صحيح'
+        })
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return jsonify({
+            'status': 'error',
+            'message': 'yt-dlp غير مثبت أو لا يعمل بشكل صحيح'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'خطأ في التطبيق: {str(e)}'
+        }), 500
 
 @app.route('/progress/<download_id>')
 def get_progress(download_id):
@@ -189,10 +238,16 @@ def get_playlist_info():
 
     except subprocess.CalledProcessError as e:
         print(f"Error calling yt-dlp: {e.stderr}")
-        return jsonify({'error': 'فشل في جلب معلومات قائمة التشغيل.'}), 500
+        error_msg = e.stderr.decode('utf-8') if e.stderr else 'Unknown error'
+        if 'Playlist unavailable' in error_msg:
+            return jsonify({'error': 'قائمة التشغيل غير متاحة أو محذوفة.'}), 400
+        elif 'Private playlist' in error_msg:
+            return jsonify({'error': 'قائمة التشغيل خاصة ولا يمكن الوصول إليها.'}), 400
+        else:
+            return jsonify({'error': 'فشل في جلب معلومات قائمة التشغيل.'}), 500
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        return jsonify({'error': 'حدث خطأ غير متوقع في السيرفر.'}), 500
+        return jsonify({'error': f'حدث خطأ غير متوقع: {str(e)}'}), 500
 
 @app.route('/batch_download', methods=['POST'])
 def batch_download():
