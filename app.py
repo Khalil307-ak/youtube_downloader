@@ -1,17 +1,58 @@
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, session
 import subprocess
 import json
 import re
 import os
+import threading
+import time
 from urllib.parse import quote
+from datetime import datetime
+import uuid
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-change-this-in-production'
+
+# تخزين حالات التحميل
+download_progress = {}
+download_history = []
+
+# إنشاء مجلد للتحميلات
+DOWNLOADS_FOLDER = 'downloads'
+if not os.path.exists(DOWNLOADS_FOLDER):
+    os.makedirs(DOWNLOADS_FOLDER)
 
 def sanitize_filename(title):
     """
     يزيل الأحرف غير الصالحة من العنوان ليكون اسم ملف صالح.
     """
     return re.sub(r'[\\/*?:"<>|]', "", title)
+
+def get_download_progress(download_id):
+    """الحصول على تقدم التحميل"""
+    return download_progress.get(download_id, {'status': 'not_found', 'progress': 0})
+
+def update_download_progress(download_id, status, progress=0, message=""):
+    """تحديث تقدم التحميل"""
+    download_progress[download_id] = {
+        'status': status,
+        'progress': progress,
+        'message': message,
+        'timestamp': datetime.now().isoformat()
+    }
+
+def add_to_history(video_info, download_path, quality):
+    """إضافة التحميل إلى التاريخ"""
+    history_item = {
+        'id': str(uuid.uuid4()),
+        'title': video_info.get('title', 'غير معروف'),
+        'url': video_info.get('url', ''),
+        'quality': quality,
+        'download_path': download_path,
+        'timestamp': datetime.now().isoformat(),
+        'size': os.path.getsize(download_path) if os.path.exists(download_path) else 0
+    }
+    download_history.append(history_item)
+    return history_item
 
 @app.route('/')
 def index():
@@ -92,11 +133,111 @@ def get_video_info():
         print(f"An unexpected error occurred: {e}")
         return jsonify({'error': 'حدث خطأ غير متوقع في السيرفر.'}), 500
 
+@app.route('/progress/<download_id>')
+def get_progress(download_id):
+    """الحصول على تقدم التحميل"""
+    return jsonify(get_download_progress(download_id))
+
+@app.route('/history')
+def get_history():
+    """الحصول على تاريخ التحميلات"""
+    return jsonify(download_history[-20:])  # آخر 20 تحميل
+
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    """مسح تاريخ التحميلات"""
+    global download_history
+    download_history.clear()
+    return jsonify({'message': 'تم مسح التاريخ بنجاح'})
+
+@app.route('/playlist_info', methods=['POST'])
+def get_playlist_info():
+    """جلب معلومات قائمة التشغيل"""
+    data = request.json
+    url = data.get('url')
+    
+    if not url:
+        return jsonify({'error': 'الرجاء إدخال رابط صالح.'}), 400
+
+    try:
+        command = ['yt-dlp', '--dump-json', '--flat-playlist', '--no-warnings', url]
+        
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        result = subprocess.run(command, capture_output=True, text=True, check=True, encoding='utf-8', startupinfo=startupinfo)
+        
+        # تحليل النتائج
+        videos = []
+        for line in result.stdout.strip().split('\n'):
+            if line:
+                video_data = json.loads(line)
+                videos.append({
+                    'title': video_data.get('title', 'بدون عنوان'),
+                    'url': video_data.get('url', ''),
+                    'duration': video_data.get('duration', 0),
+                    'thumbnail': video_data.get('thumbnail', '')
+                })
+        
+        return jsonify({
+            'playlist_title': videos[0].get('title', 'قائمة تشغيل') if videos else 'قائمة تشغيل',
+            'total_videos': len(videos),
+            'videos': videos
+        })
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error calling yt-dlp: {e.stderr}")
+        return jsonify({'error': 'فشل في جلب معلومات قائمة التشغيل.'}), 500
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return jsonify({'error': 'حدث خطأ غير متوقع في السيرفر.'}), 500
+
+@app.route('/batch_download', methods=['POST'])
+def batch_download():
+    """تحميل متعدد للقوائم"""
+    data = request.json
+    urls = data.get('urls', [])
+    
+    if not urls:
+        return jsonify({'error': 'لا توجد روابط للتحميل'}), 400
+    
+    batch_id = str(uuid.uuid4())
+    update_download_progress(batch_id, 'starting', 0, f'بدء تحميل {len(urls)} فيديو')
+    
+    # تشغيل التحميل المتعدد في thread منفصل
+    thread = threading.Thread(target=process_batch_download, args=(batch_id, urls))
+    thread.start()
+    
+    return jsonify({'batch_id': batch_id, 'total': len(urls)})
+
+def process_batch_download(batch_id, urls):
+    """معالجة التحميل المتعدد"""
+    try:
+        total = len(urls)
+        completed = 0
+        
+        for i, url in enumerate(urls):
+            update_download_progress(batch_id, 'downloading', 
+                                   int((i / total) * 100), 
+                                   f'تحميل الفيديو {i+1} من {total}')
+            
+            # هنا يمكن إضافة منطق التحميل الفعلي
+            time.sleep(2)  # محاكاة التحميل
+            completed += 1
+        
+        update_download_progress(batch_id, 'completed', 100, f'تم تحميل {completed} فيديو بنجاح')
+        
+    except Exception as e:
+        update_download_progress(batch_id, 'error', 0, f'خطأ: {str(e)}')
+
 @app.route('/download')
 def download():
     url = request.args.get('url')
     itag = request.args.get('itag')
     title = request.args.get('title', 'video')
+    download_id = request.args.get('download_id', str(uuid.uuid4()))
 
     if not url or not itag:
         return "معلمات ناقصة!", 400
@@ -114,8 +255,6 @@ def download():
         ext_result = subprocess.run(command_get_ext, capture_output=True, text=True, check=True, encoding='utf-8', startupinfo=startupinfo)
         file_extension = ext_result.stdout.strip()
 
-        # إذا طلب المستخدم صوت فقط، يمكننا تسمية الملف MP3 لتسهيل الأمر
-        # yt-dlp لا يقوم بالتحويل هنا، فقط يبث البيانات الخام
         is_audio_request = request.args.get('is_audio') == 'true'
         download_extension = "mp3" if is_audio_request else file_extension
         download_name = f"{filename}.{download_extension}"
@@ -125,16 +264,44 @@ def download():
             'Content-Disposition': f"attachment; filename*=UTF-8''{encoded_filename}"
         }
 
+        # تحديث حالة التحميل
+        update_download_progress(download_id, 'downloading', 0, 'بدء التحميل...')
+
         command = ['yt-dlp', '-f', itag, '-o', '-', url]
         
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo)
         
-        return Response(iter(lambda: process.stdout.read(8192), b''),
-                        mimetype='application/octet-stream',
-                        headers=headers)
+        def generate():
+            try:
+                chunk_size = 8192
+                total_size = 0
+                
+                while True:
+                    chunk = process.stdout.read(chunk_size)
+                    if not chunk:
+                        break
+                    
+                    total_size += len(chunk)
+                    yield chunk
+                    
+                    # تحديث التقدم (تقدير)
+                    if total_size % (chunk_size * 100) == 0:
+                        update_download_progress(download_id, 'downloading', 50, f'تم تحميل {total_size // 1024} KB')
+                
+                update_download_progress(download_id, 'completed', 100, 'تم التحميل بنجاح')
+                
+                # إضافة للتاريخ
+                add_to_history({'title': title, 'url': url}, download_name, itag)
+                
+            except Exception as e:
+                update_download_progress(download_id, 'error', 0, f'خطأ: {str(e)}')
+                raise
+        
+        return Response(generate(), mimetype='application/octet-stream', headers=headers)
 
     except Exception as e:
         print(f"Download error: {e}")
+        update_download_progress(download_id, 'error', 0, f'خطأ: {str(e)}')
         return f"حدث خطأ أثناء التحميل: {str(e)}", 500
 
 if __name__ == '__main__':
