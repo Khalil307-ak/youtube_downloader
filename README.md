@@ -4,14 +4,31 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 
 ## ✨ Features
 
-- 🎯 **Multiple Quality Downloads**: Video+Audio, Video Only, Audio Only
-- 🌙 **Dark/Light Mode**: With preference saving
-- 📱 **Responsive Design**: Works on all devices
-- 🇸🇦 **Full Arabic Interface**: With RTL direction support
-- ⚡ **Fast & Secure**: Advanced error handling
-- 🎨 **Modern Design**: Beautiful and user-friendly interface
-- 🔄 **Real-time Processing**: Live download progress
-- 🛡️ **Safe File Handling**: Automatic filename sanitization
+### 🎯 **Download Options**
+- **Multiple Quality Downloads**: Video+Audio, Video Only, Audio Only
+- **Playlist Support**: Download entire YouTube playlists
+- **Batch Download**: Download multiple videos simultaneously
+- **Quality Preview**: See available formats before downloading
+
+### 🎨 **User Experience**
+- **Dark/Light Mode**: With automatic preference saving
+- **Responsive Design**: Works perfectly on all devices
+- **Full Arabic Interface**: Complete RTL support with Arabic fonts
+- **Real-time Progress**: Live download progress tracking
+- **Smart Notifications**: Download completion alerts
+
+### ⚡ **Advanced Features**
+- **Download History**: Track all your downloads with details
+- **Advanced Settings**: Customize download behavior
+- **Settings Import/Export**: Backup and restore your preferences
+- **Concurrent Downloads**: Multiple simultaneous downloads
+- **Error Recovery**: Robust error handling and recovery
+
+### 🛡️ **Security & Performance**
+- **Safe File Handling**: Automatic filename sanitization
+- **Input Validation**: Secure URL and parameter validation
+- **Memory Efficient**: Optimized for large file downloads
+- **Cross-Platform**: Works on Windows, Linux, and macOS
 
 ## 🛠️ Requirements
 
@@ -23,7 +40,7 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/Khalil307-akyoutube_downloader.git
+git clone https://github.com/yourusername/youtube_downloader.git
 cd youtube_downloader
 ```
 
@@ -56,30 +73,77 @@ Then open your browser and go to: `http://localhost:5000`
 
 ## 📖 How to Use
 
-1. **Paste YouTube URL** in the input field
-2. **Click "جلب معلومات الفيديو" (Fetch Video Info)** to see available options
-3. **Choose appropriate quality** from three categories:
+### 🎬 Single Video Download
+1. **Go to "فيديو واحد" tab**
+2. **Paste YouTube URL** in the input field
+3. **Click "جلب معلومات الفيديو" (Fetch Video Info)** to see available options
+4. **Choose appropriate quality** from three categories:
    - 🎬 **Video + Audio**: For normal viewing and listening
    - 🖼️ **Video Only**: High quality for editing (no audio)
    - 🎵 **Audio Only**: For audio-only downloads
-4. **Click the download button** for your preferred option
+5. **Click the download button** for your preferred option
+
+### 📋 Playlist Download
+1. **Go to "قائمة تشغيل" tab**
+2. **Paste playlist URL** (e.g., `https://www.youtube.com/playlist?list=...`)
+3. **Click "جلب معلومات قائمة التشغيل"** to load all videos
+4. **Choose download option**:
+   - Download individual videos
+   - Download entire playlist at once
+5. **Monitor progress** in the active downloads section
+
+### 📦 Batch Download
+1. **Go to "تحميل متعدد" tab**
+2. **Paste multiple URLs** (one per line)
+3. **Click "جلب معلومات جميع الفيديوهات"**
+4. **Select quality** and start batch download
+5. **Track progress** with real-time updates
+
+### ⚙️ Advanced Settings
+1. **Go to "الإعدادات" tab**
+2. **Configure download preferences**:
+   - Concurrent downloads limit
+   - Default quality selection
+   - Download path
+   - User agent and proxy settings
+3. **Save settings** or export/import configuration
 
 ## 🎨 Advanced Features
 
-### Dark Mode
+### 🌙 Dark Mode
 - Click the 🌙/☀️ button in the top-left corner
 - Your preference is automatically saved
+- Smooth transitions between themes
 
-### Quality Categories
-- **Video + Audio**: MP4, WebM in various qualities
-- **Video Only**: Very high quality for professional editing
-- **Audio Only**: MP3, M4A, WebM in different sizes
+### 📊 Progress Tracking
+- **Real-time Progress Bars**: See download progress in real-time
+- **Active Downloads Monitor**: Track multiple downloads simultaneously
+- **Completion Notifications**: Get notified when downloads finish
+- **Error Handling**: Automatic retry and error reporting
 
-### Smart Features
+### 📋 Download Management
+- **Download History**: View all previous downloads with details
+- **Clear History**: Remove old download records
+- **File Size Tracking**: Monitor storage usage
+- **Timestamp Records**: Track when downloads were completed
+
+### ⚙️ Smart Settings
+- **Quality Categories**:
+  - **Video + Audio**: MP4, WebM in various qualities
+  - **Video Only**: Very high quality for professional editing
+  - **Audio Only**: MP3, M4A, WebM in different sizes
 - **Automatic Quality Sorting**: Best to lowest quality
 - **File Size Display**: Shows approximate download size
 - **Format Information**: Displays container format and codecs
 - **Arabic Filename Support**: Properly handles Arabic characters
+
+### 🔧 Configuration Options
+- **Concurrent Downloads**: Control how many downloads run simultaneously
+- **Default Quality**: Set preferred download quality
+- **Download Path**: Customize where files are saved
+- **Proxy Support**: Configure proxy settings for restricted networks
+- **User Agent**: Customize browser identification
+- **Settings Backup**: Export/import your configuration
 
 ## 📁 Project Structure
 
