@@ -1,3 +1,7 @@
+Flask>=2.2.5
+yt-dlp>=2025.01.01
+requests>=2.31.0
+gunicorn==21.2.0 ; platform_system != "Windows"
 Flask==2.3.3
 Werkzeug==2.3.7
 Jinja2==3.1.2
