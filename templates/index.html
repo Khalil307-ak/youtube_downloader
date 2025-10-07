@@ -17,11 +17,12 @@
         
         <!-- تبويبات الميزات -->
         <div class="tabs">
-            <button class="tab-btn active" data-tab="single">فيديو واحد</button>
+            <button class="tab-btn active" data-tab="single">رابط واحد</button>
             <button class="tab-btn" data-tab="search">بحث يوتيوب</button>
             <button class="tab-btn" data-tab="playlist">قائمة تشغيل</button>
             <button class="tab-btn" data-tab="batch">تحميل متعدد</button>
             <button class="tab-btn" data-tab="tools">أدوات متقدمة</button>
+            <button class="tab-btn" data-tab="multi">منصات متعددة</button>
             <button class="tab-btn" data-tab="settings">الإعدادات</button>
             <button class="tab-btn" data-tab="history">التاريخ</button>
         </div>
@@ -29,10 +30,29 @@
         <!-- تبويب الفيديو الواحد -->
         <div id="single-tab" class="tab-content active">
             <div class="input-container">
-                <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+                <input type="text" id="youtube-url" placeholder="الصق أي رابط مدعوم (YouTube, Vimeo, Facebook, Twitter/X, Instagram ...)">
                 <button id="fetch-btn">جلب معلومات الفيديو</button>
             </div>
         </div>
+        <!-- تبويب المنصات المتعددة -->
+        <div id="multi-tab" class="tab-content">
+            <div class="multi-container">
+                <p class="note">يتم دعم عشرات المنصات عبر yt-dlp تلقائياً (YouTube, Vimeo, Facebook, Twitter/X, Instagram, TikTok وغيرها). ما عليك سوى لصق الرابط في تبويب "رابط واحد".</p>
+                <div class="supported-list">
+                    <span class="badge">YouTube</span>
+                    <span class="badge">Vimeo</span>
+                    <span class="badge">Facebook</span>
+                    <span class="badge">Twitter/X</span>
+                    <span class="badge">Instagram</span>
+                    <span class="badge">TikTok</span>
+                    <span class="badge">SoundCloud</span>
+                    <span class="badge">Reddit</span>
+                    <span class="badge">Likee</span>
+                </div>
+                <small>ملاحظة: قد تتطلب بعض المنصات تسجيل دخول أو قيود مناطق. يعتمد الدعم على نسخة yt-dlp.</small>
+            </div>
+        </div>
+
 
         <!-- تبويب البحث -->
         <div id="search-tab" class="tab-content">
@@ -259,6 +279,22 @@
         </div>
 
     </div>
+
+    <!-- معلومات المطوّر -->
+    <footer class="app-footer">
+        <div class="dev-card">
+            <div class="dev-meta">
+                <h4>حول المطوّر</h4>
+                <p><strong>الاسم:</strong> khalil agourram</p>
+                <p><strong>البريد:</strong> <a href="mailto:khalil.akram307@gmail.com">khalil.akram307@gmail.com</a></p>
+            </div>
+            <div class="dev-links">
+                <a href="https://web.facebook.com/khalil.akram.584342?locale=ar_AR" target="_blank" rel="noopener" class="dev-link">Facebook</a>
+                <a href="https://x.com/Khalil1081506" target="_blank" rel="noopener" class="dev-link">X</a>
+                <a href="https://www.instagram.com/kx_root/" target="_blank" rel="noopener" class="dev-link">Instagram</a>
+            </div>
+        </div>
+    </footer>
 
     <script>
         const fetchBtn = document.getElementById('fetch-btn');
