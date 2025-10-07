@@ -1,3 +1,48 @@
+## أداة تحميل الفيديوهات (YouTube والمزيد)
+
+تطبيق Flask بسيط يدعم التحميل من منصات متعددة عبر yt-dlp: YouTube, Vimeo, Facebook, Twitter/X, Instagram, TikTok, SoundCloud وغيرها.
+
+### المتطلبات
+- Python 3.9+
+- yt-dlp
+- ffmpeg (لتحويل الصوت/الفيديو واقتصاصه)
+
+### التثبيت
+1. إنشاء بيئة افتراضية (اختياري)
+2. تثبيت المتطلبات:
+```bash
+pip install -r requirements.txt
+```
+3. تأكد من تثبيت ffmpeg وإضافته لمسار النظام.
+
+### التشغيل
+```bash
+python app.py
+```
+ثم افتح المتصفح على `http://127.0.0.1:5000`.
+
+### المزايا
+- جلب معلومات الفيديو وعرض الجودات (فيديو+صوت، فيديو فقط، صوت فقط)
+- بحث يوتيوب وعرض النتائج
+- معلومات قوائم التشغيل مع تحميل فردي أو متعدد
+- تحويل إلى MP3 بجودات مختلفة
+- تقطيع الفيديو عبر ffmpeg
+- تحميل الترجمات بصيغة SRT
+- شريط تقدم وتتبع التحميلات
+- دعم منصات متعددة تلقائياً عبر yt-dlp
+
+### منصات مدعومة
+يعتمد الدعم على yt-dlp ويغطي عشرات المواقع. بعض المنصات قد تتطلب تسجيل دخول أو تكون مقيّدة جغرافياً.
+
+### معلومات المطوّر
+- الاسم: khalil agourram
+- البريد: khalil.akram307@gmail.com
+- Facebook: [الملف](https://web.facebook.com/khalil.akram.584342?locale=ar_AR)
+- X: [الملف](https://x.com/Khalil1081506)
+- Instagram: [الملف](https://www.instagram.com/kx_root/)
+
+### الترخيص
+للاستخدام الشخصي/التعليمي. احترام شروط كل منصة وحقوق النشر.
 # Advanced YouTube Downloader 🎬
 
 A sophisticated web application for downloading YouTube videos in multiple qualities with a beautiful Arabic interface and advanced features.
@@ -44,7 +89,7 @@ A sophisticated web application for downloading YouTube videos in multiple quali
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/Khalil307-ak/youtube_downloader.git
+git clone https://github.com/yourusername/youtube_downloader.git
 cd youtube_downloader
 ```
 
@@ -306,7 +351,7 @@ We welcome contributions! You can:
 ### Development Setup
 ```bash
 # Fork and clone the repository
-git clone https://github.com/Khalil307-ak/youtube_downloader.git
+git clone https://github.com/yourusername/youtube_downloader.git
 cd youtube_downloader
 
 # Install development dependencies
