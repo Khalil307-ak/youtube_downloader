@@ -109,7 +109,8 @@ def get_video_info():
                 'ext': f.get('ext'),
                 'fps': f.get('fps'),
                 'vcodec': f.get('vcodec'),
-                'acodec': f.get('acodec')
+                'acodec': f.get('acodec'),
+                'abr': f.get('abr')  # معدل البت للصوت بالكيلو بت/ثانية إن وجد
             }
 
             # تصنيف الجودات
@@ -131,7 +132,7 @@ def get_video_info():
 
         video_audio_streams = sorted(video_audio_streams, key=lambda x: get_resolution_number(x['resolution']), reverse=True)
         video_only_streams = sorted(video_only_streams, key=lambda x: (get_resolution_number(x['resolution']), x.get('fps', 0)), reverse=True)
-        audio_only_streams = sorted(audio_only_streams, key=lambda x: x.get('abr', 0), reverse=True)
+        audio_only_streams = sorted(audio_only_streams, key=lambda x: (x.get('abr') or 0), reverse=True)
 
         return jsonify({
             'video_info': video_info,
@@ -144,7 +145,8 @@ def get_video_info():
 
     except subprocess.CalledProcessError as e:
         print(f"Error calling yt-dlp: {e.stderr}")
-        error_msg = e.stderr.decode('utf-8') if e.stderr else 'Unknown error'
+        # e.stderr هو نص بالفعل لأننا استخدمنا text=True
+        error_msg = e.stderr if e.stderr else 'Unknown error'
         if 'Video unavailable' in error_msg:
             return jsonify({'error': 'الفيديو غير متاح أو محذوف.'}), 400
         elif 'Private video' in error_msg:
